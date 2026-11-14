@@ -1,0 +1,11 @@
+build/
+dist/
+romfs/
+*.bin
+*.cps1
+*.zip
+*.ppm
+__pycache__/
+*.pyc
+tools/test_cps1_host
+tools/verify_ta_and_sw
