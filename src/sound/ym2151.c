@@ -1557,24 +1557,29 @@ signed int mod_ind, pom;
 
 	if (mod_ind)
 	{
-		unsigned int kc_channel;
+		signed int kc_channel = (signed int)op->KCindex + mod_ind;
+		signed int idx;
+		#define CLAMP_FREQ_IDX(x) (((x) < 0) ? 0 : (((x) >= 11*768) ? (11*768 - 1) : (x)))
 
-		kc_channel = op->KCindex + mod_ind;
-
-		pom = ( (PSG->freq[ kc_channel + op->DT2 ] + op->DT1v) * op->MUL ) >> 1;
+		idx = kc_channel + (signed int)op->DT2;
+		pom = ( (PSG->freq[ CLAMP_FREQ_IDX(idx) ] + op->DT1v) * op->MUL ) >> 1;
 		op->phase += (pom - op->freq);
 
 		op+=8;
-		pom = ( (PSG->freq[ kc_channel + op->DT2 ] + op->DT1v) * op->MUL ) >> 1;
+		idx = kc_channel + (signed int)op->DT2;
+		pom = ( (PSG->freq[ CLAMP_FREQ_IDX(idx) ] + op->DT1v) * op->MUL ) >> 1;
 		op->phase += (pom - op->freq);
 
 		op+=8;
-		pom = ( (PSG->freq[ kc_channel + op->DT2 ] + op->DT1v) * op->MUL ) >> 1;
+		idx = kc_channel + (signed int)op->DT2;
+		pom = ( (PSG->freq[ CLAMP_FREQ_IDX(idx) ] + op->DT1v) * op->MUL ) >> 1;
 		op->phase += (pom - op->freq);
 
 		op+=8;
-		pom = ( (PSG->freq[ kc_channel + op->DT2 ] + op->DT1v) * op->MUL ) >> 1;
+		idx = kc_channel + (signed int)op->DT2;
+		pom = ( (PSG->freq[ CLAMP_FREQ_IDX(idx) ] + op->DT1v) * op->MUL ) >> 1;
 		op->phase += (pom - op->freq);
+		#undef CLAMP_FREQ_IDX
 	}
 }
 

@@ -267,7 +267,7 @@ def try_pack_explicit_game(short_name: str, zf_map: dict):
             )
             p2 = byteswap_16bit_words(find_zip_entry(zf_map, ["ff-32m.8h", "ff_32m.8h"]))
             m68k = p0 + p1 + p2
-            z80 = find_zip_entry(zf_map, ["ff_09.12b"])[:0x8000]
+            z80 = find_zip_entry(zf_map, ["ff_09.12b"])
             oki = (
                 find_zip_entry(zf_map, ["ff_18.11c"])
                 + find_zip_entry(zf_map, ["ff_19.12c"])
@@ -308,7 +308,7 @@ def try_pack_explicit_game(short_name: str, zf_map: dict):
                 pass
 
             m68k = b"".join(chunks_68k)
-            z80 = find_zip_entry(zf_map, ["sf2j_09.12a", "sf2_9.12a", "sf2_09.12a"])[:0x8000]
+            z80 = find_zip_entry(zf_map, ["sf2j_09.12a", "sf2_9.12a", "sf2_09.12a"])
             oki = (
                 find_zip_entry(zf_map, ["sf2j_18.11c", "sf2_18.11c"])
                 + find_zip_entry(zf_map, ["sf2j_19.12c", "sf2_19.12c"])
@@ -366,7 +366,7 @@ def try_pack_explicit_game(short_name: str, zf_map: dict):
             if short_name != "pang3n":
                 decrypt_pang3_68k(m68k_ba)
             m68k = bytes(m68k_ba)
-            z80 = find_zip_entry(zf_map, ["pa3_11.11f", "pa3_09.12b", "pa3_9.12b"])[:0x8000]
+            z80 = find_zip_entry(zf_map, ["pa3_11.11f", "pa3_09.12b", "pa3_9.12b"])
             oki = (
                 find_zip_entry(zf_map, ["pa3_05.10d", "pa3_14.11c"])
                 + find_zip_entry(zf_map, ["pa3_06.11d", "pa3_15.12c"])
@@ -402,7 +402,7 @@ def try_pack_explicit_game(short_name: str, zf_map: dict):
                 )
                 p2 = p2a + p2b
             m68k = p0 + p1 + p2
-            z80 = find_zip_entry(zf_map, ["st_09.12b", "stj_09.12b", "09.12b"])[:0x8000]
+            z80 = find_zip_entry(zf_map, ["st_09.12b", "stj_09.12b", "09.12b"])
             oki = (
                 find_zip_entry(zf_map, ["st_18.11c", "stj_18.11c", "18.11c"])
                 + find_zip_entry(zf_map, ["st_19.12c", "stj_19.12c", "19.12c"])
@@ -449,7 +449,7 @@ def try_pack_explicit_game(short_name: str, zf_map: dict):
                     interleave_16bit_pair(find_zip_entry(zf_map, ["rte_29a.10f", "rtj_35.11f"]), find_zip_entry(zf_map, ["rte_34a.10h", "rtj_41.11h"])),
                 ]
             m68k = b"".join(chunks)
-            z80 = find_zip_entry(zf_map, ["rt_23.13b"])[:0x8000]
+            z80 = find_zip_entry(zf_map, ["rt_23.13b", "rt_09.4b"])
             oki = find_zip_entry(zf_map, ["rt_30.12c"]) + find_zip_entry(zf_map, ["rt_31.13c"])
             g0 = build_cps1_gfx_bank(
                 find_zip_entry(zf_map, ["rt-1m.3a"]),
@@ -511,8 +511,8 @@ def detect_and_pack_cps1_zip(zip_path: str):
     # Pad/align sections:
     if len(z80_bytes) < 0x8000:
         z80_bytes = z80_bytes + b"\x00" * (0x8000 - len(z80_bytes))
-    else:
-        z80_bytes = z80_bytes[:0x8000]
+    elif len(z80_bytes) > 0x20000:
+        z80_bytes = z80_bytes[:0x20000]
 
     if len(oki_bytes) < 0x40000:
         oki_bytes = oki_bytes + b"\x00" * (0x40000 - len(oki_bytes))

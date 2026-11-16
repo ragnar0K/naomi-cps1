@@ -56,13 +56,41 @@ typedef void (*mem_write_handler)(int offset, int data);
 #define state_load_UINT8(f, m, c, n, v, s)  do {} while (0)
 #define state_load_INT8(f, m, c, n, v, s)   do {} while (0)
 
+extern uint8_t *g_z80_rom;
+extern uint8_t  g_z80_ram[0x0800];
+
 uint8_t cps1_z80_read(uint16_t addr);
 void    cps1_z80_write(uint16_t addr, uint8_t val);
 
-#define cpu_readmem16(addr)        cps1_z80_read(addr)
-#define cpu_writemem16(addr, val)  cps1_z80_write(addr, val)
-#define cpu_readop(addr)           cps1_z80_read(addr)
-#define cpu_readop_arg(addr)       cps1_z80_read(addr)
+static inline uint8_t cps1_z80_readop_fast(uint16_t addr)
+{
+    if (__builtin_expect(addr < 0x8000u, 1))
+        return g_z80_rom[addr];
+    return cps1_z80_read(addr);
+}
+
+static inline uint8_t cps1_z80_read_fast(uint16_t addr)
+{
+    if (__builtin_expect(addr < 0x8000u, 1))
+        return g_z80_rom[addr];
+    if (__builtin_expect((addr & 0xF800u) == 0xD000u, 1))
+        return g_z80_ram[addr & 0x7FFu];
+    return cps1_z80_read(addr);
+}
+
+static inline void cps1_z80_write_fast(uint16_t addr, uint8_t val)
+{
+    if (__builtin_expect((addr & 0xF800u) == 0xD000u, 1)) {
+        g_z80_ram[addr & 0x7FFu] = val;
+        return;
+    }
+    cps1_z80_write(addr, val);
+}
+
+#define cpu_readmem16(addr)        cps1_z80_read_fast(addr)
+#define cpu_writemem16(addr, val)  cps1_z80_write_fast(addr, val)
+#define cpu_readop(addr)           cps1_z80_readop_fast(addr)
+#define cpu_readop_arg(addr)       cps1_z80_readop_fast(addr)
 #define cpu_readport(port)         (0xff)
 #define cpu_writeport(port, val)   do {} while (0)
 

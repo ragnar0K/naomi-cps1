@@ -39,7 +39,7 @@ build/empty_romfs.bin: ${ROMFSGEN_FILE}
 
 naomi_cps1_server.bin: ${MAKEROM_FILE} ${NAOMI_BIN_FILE} build/empty_romfs.bin
 	${MAKEROM} $@ \
-		--title "CAPCOM CPS1 SERVER" \
+		--title "CAPCOM CPS1  SERVER NAOMI2" \
 		--publisher "Capcom / Homebrew" \
 		--serial "${SERIAL}" \
 		--section ${NAOMI_BIN_FILE},${START_ADDR} \

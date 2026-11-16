@@ -53,7 +53,7 @@ typedef struct __attribute__((packed)) {
 } cps1_bundle_hdr_v2_t;
 
 #define M68K_MAX_ROM_SIZE   0x200000u   /* Up to 2 MB 68000 ROM */
-#define Z80_MAX_ROM_SIZE    0x018000u   /* Up to 96 KB Z80 ROM */
+#define Z80_MAX_ROM_SIZE    0x020000u   /* Up to 128 KB Z80 ROM */
 #define OKI_MAX_ROM_SIZE    0x080000u   /* Up to 512 KB OKI6295 ROM */
 
 uint8_t  *g_m68k_rom   = NULL;
@@ -65,7 +65,7 @@ static uint16_t *g_tile32_pu  = NULL;
 static uint32_t  g_max_char   = 0x008000u;
 static uint32_t  g_max_tile16 = 0x004000u;
 static uint32_t  g_max_tile32 = 0x001000u;
-static uint8_t  *g_z80_rom    = NULL;
+uint8_t  *g_z80_rom    = NULL;
 static uint32_t  g_z80_rom_size = 0x010000u;
 static uint8_t  *g_oki_rom    = NULL;
 static uint32_t  g_oki_rom_size = 0x040000u;
@@ -81,7 +81,7 @@ uint8_t         g_gfxram[0x40000]      __attribute__((aligned(32)));
 uint8_t         g_mainram[0x10000]     __attribute__((aligned(32)));
 static uint8_t  g_output[0x100]        __attribute__((aligned(32)));
 static uint8_t  g_buffered_obj[0x0800] __attribute__((aligned(32)));
-static uint8_t  g_z80_ram[0x0800]      __attribute__((aligned(32)));
+uint8_t  g_z80_ram[0x0800]      __attribute__((aligned(32)));
 
 static uint16_t g_canvas[CPS1_BUF_HEIGHT][CPS1_BUF_STRIDE]  __attribute__((aligned(32)));
 static uint8_t  g_pri_buf[CPS1_BUF_HEIGHT][CPS1_BUF_STRIDE] __attribute__((aligned(32)));
@@ -2283,6 +2283,7 @@ static void cps1_detect_z80_idle_loop(void)
         return;
 
     for (uint32_t i = 0x0040; i < 0x0160; i++) {
+        /* Pattern A (Final Fight): LD A,(D001)/LD B,A/LD A,(D000)/CP B/CALL NZ,... -> CP (HL)/JR Z,i */
         if (g_z80_rom[i + 0] == 0x3A && g_z80_rom[i + 1] == 0x01 && g_z80_rom[i + 2] == 0xD0 &&
             g_z80_rom[i + 3] == 0x47 &&
             g_z80_rom[i + 4] == 0x3A && g_z80_rom[i + 5] == 0x00 && g_z80_rom[i + 6] == 0xD0 &&
@@ -2298,6 +2299,19 @@ static void cps1_detect_z80_idle_loop(void)
                         return;
                     }
                 }
+            }
+        }
+        /* Pattern B (SF2 / 3 Wonders / later CPS-1): LD HL,D0xx / LD A,(D0yy) / CP (HL) / JR Z,i */
+        if (g_z80_rom[i + 0] == 0x21 && g_z80_rom[i + 2] == 0xD0 &&
+            g_z80_rom[i + 3] == 0x3A && g_z80_rom[i + 5] == 0xD0 &&
+            g_z80_rom[i + 6] == 0xBE && g_z80_rom[i + 7] == 0x28)
+        {
+            int8_t rel = (int8_t)g_z80_rom[i + 8];
+            uint32_t target = (uint32_t)((int32_t)(i + 9) + rel);
+            if (target == i) {
+                g_z80_idle_pc  = (uint16_t)i;
+                g_z80_idle_ppc = (uint16_t)(i + 7);
+                return;
             }
         }
     }
